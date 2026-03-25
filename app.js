@@ -614,6 +614,89 @@ function exportText() {
     }
 }
 
+// ============================================================
+//  IMPRIMIR (issue #3)
+// ============================================================
+function printList() {
+    if (!state.lastResult) return;
+    const { bins, unfitted, sw, sh, k } = state.lastResult;
+    const thick    = parseFloat($('sheetThick').value) || 18;
+    const totalPieces = bins.reduce((s, b) => s + b.placed.length, 0);
+    const totalArea   = bins.length * sw * sh;
+    const usedArea    = bins.reduce((s, b) => s + b.usedArea, 0);
+    const efficiency  = totalArea > 0 ? (usedArea / totalArea * 100).toFixed(1) : '0';
+    const wasteM2     = ((totalArea - usedArea) / 1_000_000).toFixed(4);
+    const date        = new Date().toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+
+    // Obtener imagenes de los canvas actuales
+    const canvases = $('canvasArea').querySelectorAll('canvas');
+    const canvasImgs = Array.from(canvases).map(c => c.toDataURL('image/png'));
+
+    let html = `
+    <div class="print-header">
+        <div class="print-logo">OptiNerds</div>
+        <div class="print-meta">
+            <span>Fecha: ${date}</span>
+            <span>Placa: ${sw} × ${sh}mm  |  Espesor: ${thick}mm  |  Kerf: ${k}mm</span>
+            <span>Eficiencia total: ${efficiency}%  |  Desperdicio: ${wasteM2} m²</span>
+        </div>
+    </div>`;
+
+    bins.forEach((bin, idx) => {
+        // Expandir cada pieza en filas individuales para el checklist
+        const rows = [];
+        for (const p of bin.placed) {
+            rows.push({ name: p.name.replace(/ \(\d+\)$/, ''), w: p.labelW, h: p.labelH, rotated: p.rotated });
+        }
+        // Ordenar por nombre
+        rows.sort((a, b) => a.name.localeCompare(b.name));
+
+        html += `
+        <div class="print-sheet">
+            <div class="print-sheet-title">
+                Placa ${idx + 1} &nbsp;—&nbsp; ${sw} × ${sh}mm &nbsp;|&nbsp; Eficiencia: ${bin.efficiency}%
+                &nbsp;(${bin.placed.length} piezas)
+            </div>
+            ${canvasImgs[idx] ? `<img class="print-diagram" src="${canvasImgs[idx]}" alt="Diagrama placa ${idx + 1}">` : ''}
+            <table class="print-table">
+                <thead>
+                    <tr>
+                        <th class="col-check">Hecho</th>
+                        <th class="col-name">Pieza</th>
+                        <th class="col-dims">Dimensiones</th>
+                        <th class="col-note">Nota</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${rows.map(r => `
+                    <tr>
+                        <td class="col-check"><span class="checkbox"></span></td>
+                        <td class="col-name">${escHtml(r.name)}</td>
+                        <td class="col-dims">${r.w} × ${r.h} mm</td>
+                        <td class="col-note">${r.rotated ? 'Rotar' : ''}</td>
+                    </tr>`).join('')}
+                </tbody>
+            </table>
+        </div>`;
+    });
+
+    if (unfitted.length > 0) {
+        html += `<div class="print-warning">
+            ⚠ No entraron: ${unfitted.map(p => `${escHtml(p.name)} (${p.origW}×${p.origH}mm)`).join(', ')}
+        </div>`;
+    }
+
+    html += `
+    <div class="print-footer">
+        Total: ${totalPieces} piezas en ${bins.length} placa${bins.length !== 1 ? 's' : ''}
+        &nbsp;—&nbsp; Desperdicio: ${wasteM2} m²
+        &nbsp;—&nbsp; Generado con OptiNerds
+    </div>`;
+
+    $('printArea').innerHTML = html;
+    window.print();
+}
+
 function copyToClipboard(text) {
     navigator.clipboard.writeText(text)
         .then(() => showToast('Lista copiada al portapapeles.', 'ok'))
@@ -706,12 +789,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
     $('exportBtn').addEventListener('click', exportPNG);
     $('copyTextBtn').addEventListener('click', exportText);
+    $('printBtn').addEventListener('click', printList);
 
     // Mostrar botones de exportar cuando hay resultados
     const observer = new MutationObserver(() => {
         const hasCanvas = !!$('canvasArea').querySelector('canvas');
         $('exportBtn').hidden = !hasCanvas;
         $('copyTextBtn').hidden = !hasCanvas;
+        $('printBtn').hidden = !hasCanvas;
     });
     observer.observe($('canvasArea'), { childList: true, subtree: true });
 

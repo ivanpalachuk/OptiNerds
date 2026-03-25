@@ -450,3 +450,108 @@ canvas {
         grid-template-columns: 1fr;
     }
 }
+
+/* ===== PRINT ===== */
+#printArea { display: none; }
+
+@media print {
+    body > * { display: none !important; }
+    #printArea {
+        display: block !important;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        font-size: 12px;
+        color: #000;
+        padding: 0;
+        margin: 0;
+    }
+
+    .print-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        border-bottom: 2px solid #000;
+        padding-bottom: 8px;
+        margin-bottom: 16px;
+    }
+    .print-logo {
+        font-size: 22px;
+        font-weight: 800;
+        letter-spacing: -0.5px;
+    }
+    .print-meta {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-end;
+        gap: 2px;
+        font-size: 11px;
+        color: #444;
+    }
+
+    .print-sheet {
+        margin-bottom: 24px;
+        page-break-inside: avoid;
+    }
+    .print-sheet-title {
+        font-size: 13px;
+        font-weight: 700;
+        background: #f0f0f0;
+        padding: 5px 8px;
+        margin-bottom: 8px;
+        border-left: 4px solid #000;
+    }
+
+    .print-diagram {
+        max-width: 100%;
+        max-height: 260px;
+        display: block;
+        margin-bottom: 10px;
+        border: 1px solid #ccc;
+    }
+
+    .print-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 12px;
+    }
+    .print-table th {
+        background: #e8e8e8;
+        border: 1px solid #bbb;
+        padding: 5px 8px;
+        text-align: left;
+        font-weight: 600;
+    }
+    .print-table td {
+        border: 1px solid #ccc;
+        padding: 6px 8px;
+    }
+    .print-table tr:nth-child(even) td { background: #fafafa; }
+
+    .col-check { width: 52px; text-align: center; }
+    .col-dims  { width: 130px; }
+    .col-note  { width: 70px; color: #555; font-style: italic; }
+
+    .checkbox {
+        display: inline-block;
+        width: 16px;
+        height: 16px;
+        border: 1.5px solid #555;
+        border-radius: 3px;
+        vertical-align: middle;
+    }
+
+    .print-warning {
+        background: #fff3cd;
+        border: 1px solid #e0a800;
+        padding: 6px 10px;
+        margin-bottom: 12px;
+        font-size: 11px;
+    }
+
+    .print-footer {
+        border-top: 1px solid #999;
+        padding-top: 6px;
+        font-size: 11px;
+        color: #555;
+        text-align: center;
+    }
+}
