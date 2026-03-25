@@ -75,10 +75,19 @@ class MaxRectsBin {
         this._split(best);
         this._prune();
         this.placed.push({
-            ...best,
-            origW: best.rotated ? ph : pw,
-            origH: best.rotated ? pw : ph,
-            ...meta
+            x: best.x,
+            y: best.y,
+            w: best.w,
+            h: best.h,
+            rotated: best.rotated,
+            // origW/origH = dimensiones de dibujo POST-rotacion (sin kerf)
+            origW: best.rotated ? meta.origH : meta.origW,
+            origH: best.rotated ? meta.origW : meta.origH,
+            // labelW/labelH = dimensiones originales PRE-rotacion para mostrar en etiqueta
+            labelW: meta.origW,
+            labelH: meta.origH,
+            name: meta.name,
+            color: meta.color
         });
         return true;
     }
@@ -119,7 +128,7 @@ class MaxRectsBin {
     }
 
     get usedArea() {
-        return this.placed.reduce((s, p) => s + p.w * p.h, 0);
+        return this.placed.reduce((s, p) => s + p.origW * p.origH, 0);
     }
 
     get efficiency() {
@@ -347,7 +356,7 @@ function drawBin(canvas, bin, sw, sh, k) {
                 const dimFont = Math.max(7, fontSize * 0.8);
                 ctx.font = `${dimFont}px -apple-system, sans-serif`;
                 ctx.fillStyle = 'rgba(30,58,95,0.55)';
-                ctx.fillText(`${p.origW}×${p.origH}${p.rotated ? ' ®' : ''}`, cx, cy + fontSize * 0.55);
+                ctx.fillText(`${p.labelW}×${p.labelH}${p.rotated ? ' ®' : ''}`, cx, cy + fontSize * 0.55);
             }
         }
     }
