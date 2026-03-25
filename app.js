@@ -6,7 +6,8 @@
 const state = {
     pieces: [],
     nextId: 1,
-    colorIdx: 0
+    colorIdx: 0,
+    lastResult: null   // { bins, unfitted, sw, sh, k }
 };
 
 // ============================================================
@@ -207,6 +208,7 @@ function optimize() {
         }
     }
 
+    state.lastResult = { bins, unfitted, sw, sh, k };
     renderResults(bins, unfitted, sw, sh, k);
 }
 
@@ -556,6 +558,78 @@ function exportPNG() {
     downloadCanvas(merged, 'OptiNerds_cortes.png');
 }
 
+// ============================================================
+//  EXPORTAR TEXTO (issue #4)
+// ============================================================
+function exportText() {
+    if (!state.lastResult) return;
+    const { bins, unfitted, sw, sh, k } = state.lastResult;
+
+    const totalPieces = bins.reduce((s, b) => s + b.placed.length, 0) + unfitted.length;
+    const totalArea   = bins.length * sw * sh;
+    const usedArea    = bins.reduce((s, b) => s + b.usedArea, 0);
+    const efficiency  = totalArea > 0 ? (usedArea / totalArea * 100).toFixed(1) : '0';
+    const wasteM2     = ((totalArea - usedArea) / 1_000_000).toFixed(4);
+
+    const lines = [];
+    lines.push('📋 Lista de Cortes — OptiNerds');
+    lines.push(`Placa: ${sw} × ${sh}mm  |  Kerf: ${k}mm  |  Eficiencia total: ${efficiency}%`);
+    lines.push('');
+
+    bins.forEach((bin, idx) => {
+        lines.push(`Placa ${idx + 1}  (eficiencia: ${bin.efficiency}%)`);
+
+        // Agrupar piezas identicas (mismo nombre y dimensiones)
+        const groups = new Map();
+        for (const p of bin.placed) {
+            const key = `${p.labelW}x${p.labelH}|${p.name.replace(/ \(\d+\)$/, '')}`;
+            if (!groups.has(key)) groups.set(key, { name: p.name.replace(/ \(\d+\)$/, ''), w: p.labelW, h: p.labelH, qty: 0, rotated: p.rotated });
+            groups.get(key).qty++;
+        }
+
+        for (const g of groups.values()) {
+            const rot = g.rotated ? ' (rot.)' : '';
+            const namePad = g.name.padEnd(20);
+            lines.push(`  ✂  ${namePad}  ${g.w} × ${g.h}mm  ×${g.qty}${rot}`);
+        }
+        lines.push('');
+    });
+
+    if (unfitted.length > 0) {
+        lines.push(`⚠ No entraron: ${unfitted.map(p => `${p.name} (${p.origW}×${p.origH}mm)`).join(', ')}`);
+        lines.push('');
+    }
+
+    lines.push(`Total: ${totalPieces} piezas en ${bins.length} placa${bins.length !== 1 ? 's' : ''}`);
+    lines.push(`Desperdicio: ${wasteM2} m²`);
+
+    const text = lines.join('\n');
+
+    // Web Share API (mobile) o clipboard (desktop)
+    if (navigator.share && /Mobi|Android/i.test(navigator.userAgent)) {
+        navigator.share({ title: 'Lista de Cortes — OptiNerds', text })
+            .catch(() => copyToClipboard(text));
+    } else {
+        copyToClipboard(text);
+    }
+}
+
+function copyToClipboard(text) {
+    navigator.clipboard.writeText(text)
+        .then(() => showToast('Lista copiada al portapapeles.', 'ok'))
+        .catch(() => {
+            // Fallback para navegadores sin clipboard API
+            const ta = document.createElement('textarea');
+            ta.value = text;
+            ta.style.cssText = 'position:fixed;opacity:0';
+            document.body.appendChild(ta);
+            ta.select();
+            document.execCommand('copy');
+            ta.remove();
+            showToast('Lista copiada al portapapeles.', 'ok');
+        });
+}
+
 function downloadCanvas(canvas, filename) {
     const a = document.createElement('a');
     a.download = filename;
@@ -631,10 +705,13 @@ document.addEventListener('DOMContentLoaded', () => {
     $('sheetThick').addEventListener('input', updateSheetSummary);
 
     $('exportBtn').addEventListener('click', exportPNG);
+    $('copyTextBtn').addEventListener('click', exportText);
 
-    // Mostrar boton exportar cuando hay resultados
+    // Mostrar botones de exportar cuando hay resultados
     const observer = new MutationObserver(() => {
-        $('exportBtn').hidden = !$('canvasArea').querySelector('canvas');
+        const hasCanvas = !!$('canvasArea').querySelector('canvas');
+        $('exportBtn').hidden = !hasCanvas;
+        $('copyTextBtn').hidden = !hasCanvas;
     });
     observer.observe($('canvasArea'), { childList: true, subtree: true });
 
