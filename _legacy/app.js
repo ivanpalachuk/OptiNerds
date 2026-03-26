@@ -31,7 +31,6 @@ const $ = id => document.getElementById(id);
 
 const getSheetW    = () => Math.max(1, parseFloat($('sheetW').value)     || 2440);
 const getSheetH    = () => Math.max(1, parseFloat($('sheetH').value)     || 1220);
-const getSheetQty  = () => Math.max(1, parseInt($('sheetQty').value)     || 1);
 const getKerf      = () => Math.max(0, parseFloat($('kerf').value)       || 0);
 
 // ============================================================
@@ -154,7 +153,6 @@ function optimize() {
     const sw   = getSheetW();
     const sh   = getSheetH();
     const k    = getKerf();
-    const maxSheets = getSheetQty();
 
     // 1. Expandir piezas por cantidad, agregando kerf
     const allPieces = [];
@@ -198,10 +196,6 @@ function optimize() {
         }
 
         if (!placed) {
-            if (bins.length >= maxSheets) {
-                unfitted.push(piece);
-                continue;
-            }
             const newBin = new MaxRectsBin(sw, sh);
             bins.push(newBin);
             newBin.insert(piece.pw, piece.ph, piece);
