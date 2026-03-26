@@ -1,6 +1,9 @@
 {
   "name": "optinerds",
   "private": true,
+  "engines": {
+    "node": ">=20.19.0"
+  },
   "workspaces": [
     "frontend",
     "backend"
