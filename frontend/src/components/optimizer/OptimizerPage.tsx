@@ -61,7 +61,7 @@ export function OptimizerPage() {
 
   const handleLoadDemo = () => {
     store.resetAll()
-    DEMO_PIECES.forEach((p) => store.addPiece({ ...p, color: '' }))
+    DEMO_PIECES.forEach((p) => store.addPiece({ ...p }))
   }
 
   const handleSave = () => {

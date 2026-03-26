@@ -107,7 +107,7 @@ export function PieceForm() {
       <div className="flex gap-2">
         <Button variant="ghost" size="sm" onClick={clearPieces} disabled={pieces.length === 0}>Limpiar todo</Button>
         <label className="cursor-pointer">
-          <Button variant="ghost" size="sm" as="span">Importar CSV</Button>
+          <Button variant="ghost" size="sm">Importar CSV</Button>
           <input type="file" accept=".csv,.txt" className="hidden" onChange={handleCSV} />
         </label>
       </div>

@@ -63,7 +63,7 @@ const DEFAULT: Pick<OptimizerState,
   isDirty: false,
 }
 
-export const useOptimizerStore = create<OptimizerState>()((set, get) => ({
+export const useOptimizerStore = create<OptimizerState>()((set) => ({
   ...DEFAULT,
 
   setBoardConfig: (cfg) => set((s) => ({ ...s, ...cfg, isDirty: true })),
