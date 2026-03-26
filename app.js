@@ -241,6 +241,17 @@ function renderResults(bins, unfitted, sw, sh, k) {
         area.appendChild(w);
     }
 
+    // Resumen de cantos
+    const cantosMm = state.pieces.reduce((sum, p) => {
+        return sum + ((p.cantosW ?? 0) * p.w + (p.cantosH ?? 0) * p.h) * p.qty;
+    }, 0);
+    if (cantosMm > 0) {
+        const cantosDiv = document.createElement('div');
+        cantosDiv.className = 'cantos-summary';
+        cantosDiv.innerHTML = `Canto necesario: <strong>${(cantosMm / 1000).toFixed(2)} m lineales</strong>`;
+        area.appendChild(cantosDiv);
+    }
+
     // Dibujar cada placa
     bins.forEach((bin, idx) => {
         const eff = parseFloat(bin.efficiency);
@@ -386,10 +397,12 @@ function drawBin(canvas, bin, sw, sh, k) {
 //  GESTION DE PIEZAS
 // ============================================================
 function addPiece() {
-    const name = $('pieceName').value.trim() || `Pieza ${state.nextId}`;
-    const w    = parseFloat($('pieceW').value);
-    const h    = parseFloat($('pieceH').value);
-    const qty  = Math.max(1, parseInt($('pieceQty').value) || 1);
+    const name     = $('pieceName').value.trim() || `Pieza ${state.nextId}`;
+    const w        = parseFloat($('pieceW').value);
+    const h        = parseFloat($('pieceH').value);
+    const qty      = Math.max(1, parseInt($('pieceQty').value) || 1);
+    const cantosW  = parseInt($('pieceCantosW').value) || 0;
+    const cantosH  = parseInt($('pieceCantosH').value) || 0;
 
     if (!w || !h || w <= 0 || h <= 0) {
         showToast('Ingresa dimensiones validas (ancho y alto > 0).', 'warn');
@@ -404,12 +417,14 @@ function addPiece() {
         return;
     }
 
-    state.pieces.push({ id: state.nextId++, name, w, h, qty, color: nextColor() });
+    state.pieces.push({ id: state.nextId++, name, w, h, qty, cantosW, cantosH, color: nextColor() });
 
-    $('pieceName').value = '';
-    $('pieceW').value    = '';
-    $('pieceH').value    = '';
-    $('pieceQty').value  = '1';
+    $('pieceName').value       = '';
+    $('pieceW').value          = '';
+    $('pieceH').value          = '';
+    $('pieceQty').value        = '1';
+    $('pieceCantosW').value    = '0';
+    $('pieceCantosH').value    = '0';
     $('pieceW').focus();
 
     renderPiecesList();
@@ -428,14 +443,20 @@ function renderPiecesList() {
         list.innerHTML = '<p class="empty-list">No hay piezas cargadas</p>';
         return;
     }
-    list.innerHTML = state.pieces.map(p => `
+    list.innerHTML = state.pieces.map(p => {
+        const cantosLabel = (p.cantosW || p.cantosH)
+            ? `<span class="piece-cantos">C: ↔${p.cantosW ?? 0} ↕${p.cantosH ?? 0}</span>`
+            : '';
+        return `
         <div class="piece-item">
             <span class="piece-color" style="background:${p.color}"></span>
             <span class="piece-name">${escHtml(p.name)}</span>
             <span class="piece-dims">${p.w}×${p.h}mm</span>
+            ${cantosLabel}
             <span class="piece-qty">×${p.qty}</span>
             <button class="remove-btn" onclick="removePiece(${p.id})" title="Eliminar">✕</button>
-        </div>`).join('');
+        </div>`;
+    }).join('');
 }
 
 // ============================================================
@@ -588,9 +609,13 @@ function exportText() {
         }
 
         for (const g of groups.values()) {
-            const rot = g.rotated ? ' (rot.)' : '';
+            const rot    = g.rotated ? ' (rot.)' : '';
+            const src    = state.pieces.find(p => p.name === g.name || g.name.startsWith(p.name));
+            const cW     = src?.cantosW ?? 0;
+            const cH     = src?.cantosH ?? 0;
+            const cantos = (cW || cH) ? `  | cantos ↔${cW} ↕${cH}` : '';
             const namePad = g.name.padEnd(20);
-            lines.push(`  ✂  ${namePad}  ${g.w} × ${g.h}mm  ×${g.qty}${rot}`);
+            lines.push(`  ✂  ${namePad}  ${g.w} × ${g.h}mm  ×${g.qty}${rot}${cantos}`);
         }
         lines.push('');
     });
@@ -600,8 +625,10 @@ function exportText() {
         lines.push('');
     }
 
+    const cantosMm = state.pieces.reduce((s, p) => s + ((p.cantosW ?? 0) * p.w + (p.cantosH ?? 0) * p.h) * p.qty, 0);
     lines.push(`Total: ${totalPieces} piezas en ${bins.length} placa${bins.length !== 1 ? 's' : ''}`);
     lines.push(`Desperdicio: ${wasteM2} m²`);
+    if (cantosMm > 0) lines.push(`Canto necesario: ${(cantosMm / 1000).toFixed(2)} m lineales`);
 
     const text = lines.join('\n');
 
@@ -664,17 +691,25 @@ function printList() {
                         <th class="col-check">Hecho</th>
                         <th class="col-name">Pieza</th>
                         <th class="col-dims">Dimensiones</th>
+                        <th class="col-cantos">Cantos</th>
                         <th class="col-note">Nota</th>
                     </tr>
                 </thead>
                 <tbody>
-                    ${rows.map(r => `
+                    ${rows.map(r => {
+                        const src    = state.pieces.find(p => r.name === p.name || r.name.startsWith(p.name));
+                        const cW     = src?.cantosW ?? 0;
+                        const cH     = src?.cantosH ?? 0;
+                        const cantos = (cW || cH) ? `↔${cW} ↕${cH}` : '—';
+                        return `
                     <tr>
                         <td class="col-check"><span class="checkbox"></span></td>
                         <td class="col-name">${escHtml(r.name)}</td>
                         <td class="col-dims">${r.w} × ${r.h} mm</td>
+                        <td class="col-cantos">${cantos}</td>
                         <td class="col-note">${r.rotated ? 'Rotar' : ''}</td>
-                    </tr>`).join('')}
+                    </tr>`;
+                    }).join('')}
                 </tbody>
             </table>
         </div>`;
