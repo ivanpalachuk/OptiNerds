@@ -1,0 +1,19 @@
+{
+  "name": "optinerds",
+  "private": true,
+  "workspaces": [
+    "frontend",
+    "backend"
+  ],
+  "scripts": {
+    "dev": "concurrently -n frontend,backend -c cyan,yellow \"npm -w frontend run dev\" \"npm -w backend run dev\"",
+    "dev:frontend": "npm -w frontend run dev",
+    "dev:backend": "npm -w backend run dev",
+    "build": "npm -w frontend run build && npm -w backend run build",
+    "build:frontend": "npm -w frontend run build",
+    "build:backend": "npm -w backend run build"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.0"
+  }
+}
