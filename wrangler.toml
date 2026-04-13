@@ -1,5 +1,0 @@
-# Cloudflare Pages — deploy frontend estático desde monorepo
-# Este archivo permite que `npx wrangler deploy` funcione desde la raíz del workspace
-name = "optinerds"
-pages_build_output_dir = "./frontend/dist"
-compatibility_date = "2026-04-13"

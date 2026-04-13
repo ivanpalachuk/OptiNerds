@@ -1,0 +1,5 @@
+# Cloudflare Pages — deploy frontend estático desde monorepo
+# Wrangler debe ejecutarse desde esta carpeta (frontend/), no desde la raíz
+name = "optinerds"
+pages_build_output_dir = "./dist"
+compatibility_date = "2026-04-13"
