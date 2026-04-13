@@ -29,7 +29,7 @@ export function ResultsPanel() {
   const totalPieces = pieces.reduce((s, p) => s + p.qty, 0)
   const placedCount = bins.reduce((s, b) => s + b.placements.length, 0)
   const totalArea = bins.length * sw * sh
-  const usedArea = bins.reduce((s, b) => s + (b as any).usedArea, 0)
+  const usedArea = bins.reduce((s, b) => s + b.usedArea, 0)
   const efficiency = totalArea > 0 ? (usedArea / totalArea * 100).toFixed(1) : '0'
   const wasteM2 = ((totalArea - usedArea) / 1_000_000).toFixed(4)
   const cantosMm = pieces.reduce((s, p) => s + ((p.cantosW ?? 0) * p.w + (p.cantosH ?? 0) * p.h) * p.qty, 0)
@@ -42,7 +42,7 @@ export function ResultsPanel() {
   const handleCopyText = () => {
     const lines = ['📋 Lista de Cortes — OptiNerds', `Placa: ${sw}×${sh}mm | Kerf: ${k}mm | Eficiencia: ${efficiency}%`, '']
     bins.forEach((bin, i) => {
-      lines.push(`Placa ${i + 1}  (${(bin as any).efficiency}% eficiencia)`)
+      lines.push(`Placa ${i + 1}  (${bin.efficiency}% eficiencia)`)
       const groups = new Map<string, { name: string; w: number; h: number; qty: number }>()
       for (const p of bin.placements) {
         const k = `${p.piece.w}x${p.piece.h}|${p.piece.name}`
@@ -93,7 +93,7 @@ export function ResultsPanel() {
       )}
 
       <div ref={areaRef} className="bg-white rounded-lg border border-slate-200 p-5 flex flex-col gap-6 shadow-sm">
-        {(bins as any[]).map((bin, i) => (
+        {bins.map((bin, i) => (
           <BinCanvas key={i} bin={bin} index={i} sw={sw} sh={sh} k={k} />
         ))}
       </div>

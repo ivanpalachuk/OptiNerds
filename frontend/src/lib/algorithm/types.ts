@@ -29,6 +29,8 @@ export interface BinResult {
   width: number
   height: number
   placements: Placement[]
+  usedArea: number
+  efficiency: string
 }
 
 export interface OptimizeResult {

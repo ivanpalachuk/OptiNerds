@@ -71,3 +71,16 @@ export default defineConfig([
   },
 ])
 ```
+
+## Deploy en Cloudflare (Monorepo)
+
+Este frontend vive en un monorepo. Si se ejecuta Wrangler desde la raiz del repo, falla con error de deteccion de workspace.
+
+Configuracion recomendada para Cloudflare Pages:
+
+- Root directory: `frontend`
+- Build command: `npm ci && npm run build`
+- Build output directory: `dist`
+- Variable obligatoria: `VITE_API_URL` apuntando al backend publico (`https://.../api`)
+
+Ademas, para rutas SPA como `/optimizer` y `/cuts`, se incluye fallback en `public/_redirects`.

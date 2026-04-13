@@ -26,9 +26,8 @@ export function OptimizerPage() {
   const [cutName, setCutName] = useState('')
 
   const saveMutation = useMutation({
-    mutationFn: (name: string) => {
-      const body = {
-        name,
+    mutationFn: (payload: { name?: string }) => {
+      const baseBody = {
         boardWidth: store.boardWidth,
         boardHeight: store.boardHeight,
         boardThick: store.boardThick,
@@ -37,9 +36,16 @@ export function OptimizerPage() {
         pieces: store.pieces,
         result: store.lastResult,
       }
-      return store.currentCutId
-        ? cutsApi.update(store.currentCutId, body)
-        : cutsApi.create(body)
+
+      if (store.currentCutId) {
+        return cutsApi.update(store.currentCutId, baseBody)
+      }
+
+      if (!payload.name) {
+        throw new Error('El nombre es obligatorio para crear un corte nuevo.')
+      }
+
+      return cutsApi.create({ ...baseBody, name: payload.name })
     },
     onSuccess: (data) => {
       store.markSaved(data.id)
@@ -67,7 +73,7 @@ export function OptimizerPage() {
   const handleSave = () => {
     if (store.currentCutId && !store.isDirty) return
     if (store.currentCutId) {
-      saveMutation.mutate(store.currentCutId)
+      saveMutation.mutate({})
     } else {
       setSaveModalOpen(true)
     }
@@ -123,12 +129,12 @@ export function OptimizerPage() {
             <h3 className="font-bold text-lg">Guardar corte</h3>
             <Input label="Nombre del proyecto" placeholder="Ej: Ropero dormitorio" value={cutName}
               onChange={(e) => setCutName(e.target.value)}
-              onKeyDown={(e) => { if (e.key === 'Enter' && cutName.trim()) saveMutation.mutate(cutName.trim()) }} />
+              onKeyDown={(e) => { if (e.key === 'Enter' && cutName.trim()) saveMutation.mutate({ name: cutName.trim() }) }} />
             <div className="flex gap-2">
               <Button variant="ghost" className="flex-1" onClick={() => setSaveModalOpen(false)}>Cancelar</Button>
               <Button className="flex-1" loading={saveMutation.isPending}
                 disabled={!cutName.trim()}
-                onClick={() => saveMutation.mutate(cutName.trim())}>
+                onClick={() => saveMutation.mutate({ name: cutName.trim() })}>
                 Guardar
               </Button>
             </div>
