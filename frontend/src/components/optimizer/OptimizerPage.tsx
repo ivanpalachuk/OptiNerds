@@ -8,6 +8,7 @@ import { ResultsPanel } from './ResultsPanel'
 import { Button } from '../ui/Button'
 import { Input } from '../ui/Input'
 import { cutsApi } from '../../lib/api/cuts'
+import { useAuthStore } from '../../store/authStore'
 
 const DEMO_PIECES = [
   { name: 'Tapa superior', w: 900, h: 450, qty: 1, cantosW: 2, cantosH: 0 },
@@ -20,6 +21,7 @@ const DEMO_PIECES = [
 
 export function OptimizerPage() {
   const store = useOptimizerStore()
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated)
   const qc = useQueryClient()
   const [isOptimizing, setIsOptimizing] = useState(false)
   const [saveModalOpen, setSaveModalOpen] = useState(false)
@@ -104,7 +106,7 @@ export function OptimizerPage() {
           Optimizar Cortes
         </Button>
 
-        {store.lastResult && (
+        {store.lastResult && isAuthenticated && (
           <Button
             variant="ghost"
             onClick={handleSave}
@@ -114,6 +116,11 @@ export function OptimizerPage() {
           >
             {store.currentCutId ? (store.isDirty ? 'Guardar cambios' : 'Guardado ✓') : 'Guardar corte'}
           </Button>
+        )}
+        {store.lastResult && !isAuthenticated && (
+          <p className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded p-2">
+            Modo sin backend: podés optimizar y exportar, pero guardar requiere login/API.
+          </p>
         )}
       </aside>
 

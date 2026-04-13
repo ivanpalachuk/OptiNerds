@@ -4,10 +4,8 @@ import { LoginForm } from '../components/auth/LoginForm'
 import { RegisterForm } from '../components/auth/RegisterForm'
 
 export const Route = createFileRoute('/')({
-  beforeLoad: ({ context }) => {
-    if (context.auth.isAuthenticated) {
-      throw redirect({ to: '/optimizer' })
-    }
+  beforeLoad: () => {
+    throw redirect({ to: '/optimizer' })
   },
   component: LandingPage,
 })
