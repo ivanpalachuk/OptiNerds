@@ -7,7 +7,8 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "deploy:cloudflare": "npm run build && sh -c 'test -n \"$CF_PAGES_PROJECT_NAME\" || { echo \"CF_PAGES_PROJECT_NAME is required\"; exit 1; }; npx wrangler pages deploy dist --project-name \"$CF_PAGES_PROJECT_NAME\"'"
   },
   "dependencies": {
     "@tanstack/react-query": "^5.95.2",

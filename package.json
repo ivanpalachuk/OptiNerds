@@ -14,7 +14,8 @@
     "dev:backend": "npm -w backend run dev",
     "build": "npm -w frontend run build && npm -w backend run build",
     "build:frontend": "npm -w frontend run build",
-    "build:backend": "npm -w backend run build"
+    "build:backend": "npm -w backend run build",
+    "deploy:cloudflare": "npm -w frontend run deploy:cloudflare"
   },
   "devDependencies": {
     "concurrently": "^9.1.0"

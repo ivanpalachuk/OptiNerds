@@ -82,5 +82,7 @@ Configuracion recomendada para Cloudflare Pages:
 - Build command: `npm ci && npm run build`
 - Build output directory: `dist`
 - Variable obligatoria: `VITE_API_URL` apuntando al backend publico (`https://.../api`)
+- Si usas comando de deploy personalizado: `npm run deploy:cloudflare` (desde raiz del repo)
+- Variable requerida para ese comando: `CF_PAGES_PROJECT_NAME`
 
 Ademas, para rutas SPA como `/optimizer` y `/cuts`, se incluye fallback en `public/_redirects`.
