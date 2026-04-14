@@ -1,24 +1,27 @@
-import { Request, Response, NextFunction } from 'express'
-import jwt from 'jsonwebtoken'
+import type { Context, Next } from 'hono';
+import { verifyToken } from '../utils/jwt';
 
-export interface JwtPayload {
-  userId: string
-  email: string
-  name: string
-}
+export type AppEnv = {
+  Bindings: {
+    DB: D1Database;
+    JWT_SECRET: string;
+    ALLOWED_ORIGINS: string;
+  };
+  Variables: {
+    user: { userId: string; email: string; name: string };
+  };
+};
 
-export function requireAuth(req: Request, res: Response, next: NextFunction) {
-  const header = req.headers.authorization
+export async function requireAuth(c: Context<AppEnv>, next: Next) {
+  const header = c.req.header('Authorization');
   if (!header?.startsWith('Bearer ')) {
-    res.status(401).json({ error: 'No autorizado.' })
-    return
+    return c.json({ error: 'No autorizado.' }, 401);
   }
-  try {
-    const token = header.slice(7)
-    const payload = jwt.verify(token, process.env.JWT_SECRET!) as JwtPayload
-    ;(req as any).user = payload
-    next()
-  } catch {
-    res.status(401).json({ error: 'Token inválido o expirado.' })
+  const token = header.slice(7);
+  const payload = await verifyToken(token, c.env.JWT_SECRET);
+  if (!payload) {
+    return c.json({ error: 'Token inválido o expirado.' }, 401);
   }
+  c.set('user', payload);
+  await next();
 }

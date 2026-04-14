@@ -1,0 +1,29 @@
+name = "optinerds-api"
+main = "src/index.ts"
+compatibility_date = "2026-04-13"
+
+# =============================================
+# DEFAULT = Development
+# =============================================
+
+[[d1_databases]]
+binding = "DB"
+database_name = "optinerds-db"
+database_id = "PLACEHOLDER"
+
+[vars]
+ALLOWED_ORIGINS = "http://localhost:5173"
+
+# =============================================
+# PRODUCTION — wrangler deploy --env production
+# =============================================
+[env.production]
+name = "optinerds-api-prod"
+
+[[env.production.d1_databases]]
+binding = "DB"
+database_name = "optinerds-db-prod"
+database_id = "PLACEHOLDER"
+
+[env.production.vars]
+ALLOWED_ORIGINS = "https://optinerds.pages.dev"
